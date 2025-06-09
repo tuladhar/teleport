@@ -65,6 +65,10 @@ func (w *WriterLog) SearchEvents(ctx context.Context, req SearchEventsRequest) (
 	return nil, "", trace.NotImplemented(writerCannotRead)
 }
 
+func (w *WriterLog) SearchUnstructuredEvents(ctx context.Context, req SearchEventsRequest) (events []*auditlogpb.EventUnstructured, lastKey string, err error) {
+	return nil, "", trace.NotImplemented(writerCannotRead)
+}
+
 func (w *WriterLog) ExportUnstructuredEvents(ctx context.Context, req *auditlogpb.ExportUnstructuredEventsRequest) stream.Stream[*auditlogpb.ExportEventUnstructured] {
 	return stream.Fail[*auditlogpb.ExportEventUnstructured](trace.NotImplemented(writerCannotRead))
 }
@@ -80,6 +84,10 @@ func (w *WriterLog) GetEventExportChunks(ctx context.Context, req *auditlogpb.Ge
 // Event types to filter can be specified and pagination is handled by an iterator key that allows
 // a query to be resumed.
 func (w *WriterLog) SearchSessionEvents(ctx context.Context, req SearchSessionEventsRequest) (events []apievents.AuditEvent, lastKey string, err error) {
+	return nil, "", trace.NotImplemented(writerCannotRead)
+}
+
+func (w *WriterLog) SearchUnstructuredSessionEvents(ctx context.Context, req SearchSessionEventsRequest) (events []*auditlogpb.EventUnstructured, lastKey string, err error) {
 	return nil, "", trace.NotImplemented(writerCannotRead)
 }
 

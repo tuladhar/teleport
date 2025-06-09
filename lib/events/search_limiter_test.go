@@ -174,7 +174,7 @@ func TestSearchEventsLimiterConfig(t *testing.T) {
 type mockAuditLogger struct {
 	searchEventsRespFn   func() ([]apievents.AuditEvent, string, error)
 	emitAuditEventRespFn func() error
-	events.AuditLogger
+	events.UnstructuredAuditLogger
 }
 
 func (m *mockAuditLogger) SearchEvents(ctx context.Context, req events.SearchEventsRequest) ([]apievents.AuditEvent, string, error) {

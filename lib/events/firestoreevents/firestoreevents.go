@@ -627,6 +627,14 @@ func (l *Log) getDocIDForEvent() string {
 	return uuid.New().String()
 }
 
+func (l *Log) SearchUnstructuredEvents(ctx context.Context, req events.SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	return nil, "", trace.NotImplemented("firestore backend does not support unstructured events")
+}
+
+func (l *Log) SearchUnstructuredSessionEvents(ctx context.Context, req events.SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	return nil, "", trace.NotImplemented("firestore backend does not support unstructured events")
+}
+
 func (l *Log) purgeExpiredEvents() error {
 	t := time.NewTicker(l.PurgeExpiredDocumentsPollInterval)
 	defer t.Stop()

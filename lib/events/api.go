@@ -20,12 +20,17 @@ package events
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
 	"time"
 
 	"github.com/gravitational/trace"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	auditlogpb "github.com/gravitational/teleport/api/gen/proto/go/teleport/auditlog/v1"
 	"github.com/gravitational/teleport/api/internalutils/stream"
@@ -1109,6 +1114,13 @@ type AuditLogSessionStreamer interface {
 	SessionStreamer
 }
 
+// UnstructuredAuditLoggerSessionStreamer is the primary (and the only external-facing)
+// interface for AuditLogger and SessionStreamer.
+type UnstructuredAuditLoggerSessionStreamer interface {
+	UnstructuredAuditLogger
+	SessionStreamer
+}
+
 // SessionStreamer supports streaming session chunks or events.
 type SessionStreamer interface {
 	// StreamSessionEvents streams all events from a given session recording. An
@@ -1194,6 +1206,29 @@ type AuditLogger interface {
 	GetEventExportChunks(ctx context.Context, req *auditlogpb.GetEventExportChunksRequest) stream.Stream[*auditlogpb.EventExportChunk]
 }
 
+type UnstructuredAuditLogger interface {
+	AuditLogger
+	// SearchUnstructuredEvents is a flexible way to find events.
+	//
+	// Event types to filter can be specified and pagination is handled by an iterator key that allows
+	// a query to be resumed.
+	//
+	// The only mandatory requirement is a date range (UTC).
+	//
+	// This function may never return more than 1 MiB of event data.
+	SearchUnstructuredEvents(ctx context.Context, req SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error)
+
+	// SearchUnstructuredSessionEvents is a flexible way to find session events.
+	// Only session.end events are returned by this function.
+	// This is used to find completed sessions.
+	//
+	// Event types to filter can be specified and pagination is handled by an iterator key that allows
+	// a query to be resumed.
+	//
+	// This function may never return more than 1 MiB of event data.
+	SearchUnstructuredSessionEvents(ctx context.Context, req SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error)
+}
+
 // EventFields instance is attached to every logged event
 type EventFields utils.Fields
 
@@ -1249,4 +1284,54 @@ func (f EventFields) GetTime(key string) time.Time {
 // HasField returns true if the field exists in the event.
 func (f EventFields) HasField(key string) bool {
 	return utils.Fields(f).HasField(key)
+}
+
+// EventFieldsToUnstructured converts the raw event fields stored to unstructured.
+// If the event is a session print event, it is converted to a plugins printEvent struct
+// which is then converted to structpb.Struct. Otherwise the event is marshaled directly.
+func EventFieldsToUnstructured(evt EventFields) (*auditlogpb.EventUnstructured, error) {
+	str, err := structpb.NewStruct(evt)
+	if err != nil {
+		return nil, trace.Wrap(err, "failed to convert event fields to structpb.Struct")
+	}
+
+	id := computeEventID(evt)
+
+	// If the event is a session print event, convert it to a printEvent struct
+	// to include the `data` field in the JSON.
+	if evt.GetType() == SessionPrintEvent {
+		/*	const printEventDataKey = "data"
+			// append the `data` field to the unstructured event
+			str.Fields[printEventDataKey], err = structpb.NewValue(p.Data)
+			if err != nil {
+				return nil, trace.Wrap(err)
+			}*/
+	}
+
+	return &auditlogpb.EventUnstructured{
+		Type:         evt.GetType(),
+		Index:        int64(evt.GetInt(EventIndex)),
+		Time:         timestamppb.New(evt.GetTime(EventTime)),
+		Id:           id,
+		Unstructured: str,
+	}, nil
+}
+
+// computeEventID computes the ID of the event. If the event already has an ID, it is returned.
+// Otherwise, the event is marshaled to JSON and the SHA256 hash of the JSON is returned.
+func computeEventID(evt EventFields) string {
+	id := evt.GetID()
+	if id != "" {
+		return id
+	}
+
+	d, err := json.Marshal(evt)
+	if err != nil {
+		// If the event cannot be marshaled, we return an empty string.
+		// This is a fallback and should not happen in practice.
+		return ""
+	}
+
+	hash := sha256.Sum256(d)
+	return hex.EncodeToString(hash[:])
 }

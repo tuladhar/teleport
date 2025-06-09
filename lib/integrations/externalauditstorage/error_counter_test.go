@@ -252,7 +252,7 @@ func (f *fakeAlertService) DeleteClusterAlert(ctx context.Context, alertID strin
 
 type errorLogger struct {
 	err error
-	events.AuditLogger
+	events.UnstructuredAuditLogger
 }
 
 func (l *errorLogger) EmitAuditEvent(ctx context.Context, e apievents.AuditEvent) error {

@@ -570,7 +570,7 @@ type TeleportProcess struct {
 	// backend is the process' backend
 	backend backend.Backend
 	// auditLog is the initialized audit log
-	auditLog events.AuditLogSessionStreamer
+	auditLog events.UnstructuredAuditLoggerSessionStreamer
 
 	// inventorySetupDelay lets us inject a one-time delay in the makeInventoryControlStream
 	// method that helps reduce log spam in the event of slow instance cert acquisition.
@@ -1880,10 +1880,10 @@ func initAuthUploadHandler(ctx context.Context, auditConfig types.ClusterAuditCo
 var externalAuditMissingAthenaError = trace.BadParameter("athena audit_events_uri must be configured when External Audit Storage is enabled")
 
 // initAuthExternalAuditLog initializes the auth server's audit log.
-func (process *TeleportProcess) initAuthExternalAuditLog(auditConfig types.ClusterAuditConfig, externalAuditStorage *externalauditstorage.Configurator) (events.AuditLogger, error) {
+func (process *TeleportProcess) initAuthExternalAuditLog(auditConfig types.ClusterAuditConfig, externalAuditStorage *externalauditstorage.Configurator) (events.UnstructuredAuditLogger, error) {
 	ctx := process.ExitContext()
 	var hasNonFileLog bool
-	var loggers []events.AuditLogger
+	var loggers []events.UnstructuredAuditLogger
 	for _, eventsURI := range auditConfig.AuditEventsURIs() {
 		uri, err := apiutils.ParseSessionsURI(eventsURI)
 		if err != nil {
@@ -1966,7 +1966,7 @@ func (process *TeleportProcess) initAuthExternalAuditLog(auditConfig types.Clust
 					return nil, trace.Wrap(err)
 				}
 			}
-			var logger events.AuditLogger
+			var logger events.UnstructuredAuditLogger
 			logger, err = athena.New(ctx, cfg)
 			if err != nil {
 				return nil, trace.Wrap(err)

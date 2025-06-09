@@ -198,6 +198,15 @@ func (l *FileLog) SearchEvents(ctx context.Context, req SearchEventsRequest) ([]
 	return l.searchEventsWithFilter(req.From, req.To, req.Limit, req.Order, req.StartKey, searchEventsFilter{eventTypes: req.EventTypes})
 }
 
+func (l *FileLog) SearchUnstructuredEvents(ctx context.Context, req SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	l.logger.DebugContext(ctx, "SearchEvents", "from", req.From, "to", req.To, "event_type", req.EventTypes, "limit", req.Limit)
+	return nil, "", trace.NotImplemented("FileLog does not implement SearchUnstrucutedEvents")
+}
+
+func (l *FileLog) SearchUnstructuredSessionEvents(ctx context.Context, req SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	return nil, "", trace.NotImplemented("FileLog does not implement SearchUnstructuredSessionEvents")
+}
+
 func (l *FileLog) searchEventsWithFilter(fromUTC, toUTC time.Time, limit int, order types.EventOrder, startAfter string, filter searchEventsFilter) ([]apievents.AuditEvent, string, error) {
 	if limit <= 0 {
 		limit = defaults.EventsIterationLimit

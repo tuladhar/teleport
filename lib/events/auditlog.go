@@ -243,7 +243,7 @@ type AuditLogConfig struct {
 	UploadHandler MultipartHandler
 
 	// ExternalLog is a pluggable external log service
-	ExternalLog AuditLogger
+	ExternalLog UnstructuredAuditLogger
 
 	// Context is audit log context
 	Context context.Context
@@ -485,6 +485,31 @@ func (l *AuditLog) SearchSessionEvents(ctx context.Context, req SearchSessionEve
 		return l.ExternalLog.SearchSessionEvents(ctx, req)
 	}
 	return l.localLog.SearchSessionEvents(ctx, req)
+}
+
+func (l *AuditLog) SearchUnstructuredEvents(ctx context.Context, req SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	g := l.log.With("event_type", req.EventTypes, "limit", req.Limit)
+	g.DebugContext(ctx, "SearchUnstructuredEvents", "from", req.From, "to", req.To)
+	limit := req.Limit
+	if limit <= 0 {
+		limit = defaults.EventsIterationLimit
+	}
+	if limit > defaults.EventsMaxIterationLimit {
+		return nil, "", trace.BadParameter("limit %v exceeds max iteration limit %v", limit, defaults.MaxIterationLimit)
+	}
+	req.Limit = limit
+	if l.ExternalLog != nil {
+		return l.ExternalLog.SearchUnstructuredEvents(ctx, req)
+	}
+	return l.localLog.SearchUnstructuredEvents(ctx, req)
+}
+
+func (l *AuditLog) SearchUnstructuredSessionEvents(ctx context.Context, req SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	l.log.DebugContext(ctx, "SearchSessionEvents", "from", req.From, "to", req.To, "limit", req.Limit)
+	if l.ExternalLog != nil {
+		return l.ExternalLog.SearchUnstructuredSessionEvents(ctx, req)
+	}
+	return l.localLog.SearchUnstructuredSessionEvents(ctx, req)
 }
 
 func (l *AuditLog) ExportUnstructuredEvents(ctx context.Context, req *auditlogpb.ExportUnstructuredEventsRequest) stream.Stream[*auditlogpb.ExportEventUnstructured] {

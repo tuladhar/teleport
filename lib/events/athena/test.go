@@ -124,7 +124,7 @@ func (ac *AthenaContext) Close(t *testing.T) {
 // EventuallyConsistentAuditLogger is used to add delay before searching for events
 // for eventually consistent audit loggers.
 type EventuallyConsistentAuditLogger struct {
-	Inner events.AuditLogger
+	Inner events.UnstructuredAuditLogger
 
 	// QueryDelay specifies how long query should wait after last emit event.
 	QueryDelay time.Duration
@@ -183,6 +183,28 @@ func (e *EventuallyConsistentAuditLogger) SearchSessionEvents(ctx context.Contex
 		e.emitWasAfterLastDelay = false
 	}
 	return e.Inner.SearchSessionEvents(ctx, req)
+}
+
+func (e *EventuallyConsistentAuditLogger) SearchUnstructuredEvents(ctx context.Context, req events.SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.emitWasAfterLastDelay {
+		time.Sleep(e.QueryDelay)
+		// clear emit delay
+		e.emitWasAfterLastDelay = false
+	}
+	return e.Inner.SearchUnstructuredEvents(ctx, req)
+}
+
+func (e *EventuallyConsistentAuditLogger) SearchUnstructuredSessionEvents(ctx context.Context, req events.SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.emitWasAfterLastDelay {
+		time.Sleep(e.QueryDelay)
+		// clear emit delay
+		e.emitWasAfterLastDelay = false
+	}
+	return e.Inner.SearchUnstructuredSessionEvents(ctx, req)
 }
 
 func (e *EventuallyConsistentAuditLogger) Close() error {

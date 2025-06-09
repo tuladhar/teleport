@@ -137,7 +137,7 @@ func NewErrorCounter(alertService ClusterAlertService) *ErrorCounter {
 
 // WrapAuditLogger returns an [events.AuditLogger] that will forward all calls
 // to [wrapped] and observe all errors encountered.
-func (c *ErrorCounter) WrapAuditLogger(wrapped events.AuditLogger) *ErrorCountingLogger {
+func (c *ErrorCounter) WrapAuditLogger(wrapped events.UnstructuredAuditLogger) *ErrorCountingLogger {
 	return newErrorCountingLogger(wrapped, &c.emits, &c.searches)
 }
 
@@ -292,13 +292,13 @@ func (c *errorCount) reset() {
 // ErrorCountingLogger wraps an AuditLogger and counts errors on emit and search
 // operations.
 type ErrorCountingLogger struct {
-	wrapped events.AuditLogger
+	wrapped events.UnstructuredAuditLogger
 
 	emits    *errorCount
 	searches *errorCount
 }
 
-func newErrorCountingLogger(wrapped events.AuditLogger, emits, searches *errorCount) *ErrorCountingLogger {
+func newErrorCountingLogger(wrapped events.UnstructuredAuditLogger, emits, searches *errorCount) *ErrorCountingLogger {
 	return &ErrorCountingLogger{
 		wrapped:  wrapped,
 		emits:    emits,
@@ -327,6 +327,12 @@ func (c *ErrorCountingLogger) SearchEvents(ctx context.Context, req events.Searc
 	return events, key, err
 }
 
+func (c *ErrorCountingLogger) SearchUnstructuredEvents(ctx context.Context, req events.SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	events, key, err := c.wrapped.SearchUnstructuredEvents(ctx, req)
+	c.searches.observe(err)
+	return events, key, err
+}
+
 func (c *ErrorCountingLogger) ExportUnstructuredEvents(ctx context.Context, req *auditlogpb.ExportUnstructuredEventsRequest) stream.Stream[*auditlogpb.ExportEventUnstructured] {
 	return stream.MapErr(c.wrapped.ExportUnstructuredEvents(ctx, req), func(err error) error {
 		c.searches.observe(err)
@@ -345,6 +351,12 @@ func (c *ErrorCountingLogger) GetEventExportChunks(ctx context.Context, req *aud
 // success.
 func (c *ErrorCountingLogger) SearchSessionEvents(ctx context.Context, req events.SearchSessionEventsRequest) ([]apievents.AuditEvent, string, error) {
 	events, key, err := c.wrapped.SearchSessionEvents(ctx, req)
+	c.searches.observe(err)
+	return events, key, err
+}
+
+func (c *ErrorCountingLogger) SearchUnstructuredSessionEvents(ctx context.Context, req events.SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	events, key, err := c.wrapped.SearchUnstructuredSessionEvents(ctx, req)
 	c.searches.observe(err)
 	return events, key, err
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/gravitational/trace"
 	"golang.org/x/time/rate"
 
+	auditlogpb "github.com/gravitational/teleport/api/gen/proto/go/teleport/auditlog/v1"
 	apievents "github.com/gravitational/teleport/api/types/events"
 )
 
@@ -33,7 +34,7 @@ import (
 // Note it share limiter for both SearchEvents and SearchSessionEvents.
 type SearchEventsLimiter struct {
 	limiter *rate.Limiter
-	AuditLogger
+	UnstructuredAuditLogger
 }
 
 // SearchEventsLimiterConfig is configuration for SearchEventsLimiter.
@@ -47,7 +48,7 @@ type SearchEventsLimiterConfig struct {
 	// based on RefillAmount and RefillTime.
 	Burst int
 	// AuditLogger is auditLogger that will be wrapped with limiter on search endpoints.
-	AuditLogger AuditLogger
+	AuditLogger UnstructuredAuditLogger
 }
 
 func (cfg *SearchEventsLimiterConfig) CheckAndSetDefaults() error {
@@ -73,16 +74,32 @@ func NewSearchEventLimiter(cfg SearchEventsLimiterConfig) (*SearchEventsLimiter,
 		return nil, trace.Wrap(err)
 	}
 	return &SearchEventsLimiter{
-		limiter:     rate.NewLimiter(rate.Every(cfg.RefillTime/time.Duration(cfg.RefillAmount)), cfg.Burst),
-		AuditLogger: cfg.AuditLogger,
+		limiter:                 rate.NewLimiter(rate.Every(cfg.RefillTime/time.Duration(cfg.RefillAmount)), cfg.Burst),
+		UnstructuredAuditLogger: cfg.AuditLogger,
 	}, nil
+}
+
+func (s *SearchEventsLimiter) SearchUnstructuredEvents(ctx context.Context, req SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	if !s.limiter.Allow() {
+		return nil, "", trace.LimitExceeded("rate limit exceeded for searching events")
+	}
+	out, keyset, err := s.UnstructuredAuditLogger.SearchUnstructuredEvents(ctx, req)
+	return out, keyset, trace.Wrap(err)
+}
+
+func (s *SearchEventsLimiter) SearchUnstructuredSessionEvents(ctx context.Context, req SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	if !s.limiter.Allow() {
+		return nil, "", trace.LimitExceeded("rate limit exceeded for searching events")
+	}
+	out, keyset, err := s.UnstructuredAuditLogger.SearchUnstructuredSessionEvents(ctx, req)
+	return out, keyset, trace.Wrap(err)
 }
 
 func (s *SearchEventsLimiter) SearchEvents(ctx context.Context, req SearchEventsRequest) ([]apievents.AuditEvent, string, error) {
 	if !s.limiter.Allow() {
 		return nil, "", trace.LimitExceeded("rate limit exceeded for searching events")
 	}
-	out, keyset, err := s.AuditLogger.SearchEvents(ctx, req)
+	out, keyset, err := s.UnstructuredAuditLogger.SearchEvents(ctx, req)
 	return out, keyset, trace.Wrap(err)
 }
 
@@ -90,6 +107,6 @@ func (s *SearchEventsLimiter) SearchSessionEvents(ctx context.Context, req Searc
 	if !s.limiter.Allow() {
 		return nil, "", trace.LimitExceeded("rate limit exceeded for searching events")
 	}
-	out, keyset, err := s.AuditLogger.SearchSessionEvents(ctx, req)
+	out, keyset, err := s.UnstructuredAuditLogger.SearchSessionEvents(ctx, req)
 	return out, keyset, trace.Wrap(err)
 }

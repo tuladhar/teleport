@@ -743,6 +743,14 @@ func (l *Log) SearchEvents(ctx context.Context, req events.SearchEventsRequest) 
 	return l.searchEventsWithFilter(ctx, req.From, req.To, apidefaults.Namespace, req.Limit, req.Order, req.StartKey, searchEventsFilter{eventTypes: req.EventTypes}, "")
 }
 
+func (l *Log) SearchUnstructuredEvents(ctx context.Context, req events.SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	return nil, "", trace.NotImplemented("dynamoevents backend does not support unstructured events")
+}
+
+func (l *Log) SearchUnstructuredSessionEvents(ctx context.Context, req events.SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	return nil, "", trace.NotImplemented("dynamoevents backend does not support unstructured events")
+}
+
 func (l *Log) searchEventsWithFilter(ctx context.Context, fromUTC, toUTC time.Time, namespace string, limit int, order types.EventOrder, startKey string, filter searchEventsFilter, sessionID string) ([]apievents.AuditEvent, string, error) {
 	rawEvents, lastKey, err := l.searchEventsRaw(ctx, fromUTC, toUTC, namespace, limit, order, startKey, filter, sessionID)
 	if err != nil {

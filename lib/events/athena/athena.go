@@ -537,6 +537,14 @@ func (l *Log) SearchSessionEvents(ctx context.Context, req events.SearchSessionE
 	return l.querier.SearchSessionEvents(ctx, req)
 }
 
+func (l *Log) SearchUnstructuredEvents(ctx context.Context, req events.SearchEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	return nil, "", trace.NotImplemented("athena backend does not support unstructured events")
+}
+
+func (l *Log) SearchUnstructuredSessionEvents(ctx context.Context, req events.SearchSessionEventsRequest) ([]*auditlogpb.EventUnstructured, string, error) {
+	return nil, "", trace.NotImplemented("athena backend does not support unstructured events")
+}
+
 func (l *Log) Close() error {
 	// consumerCloser is nil when consumer is disabled.
 	if l.consumerCloser != nil {

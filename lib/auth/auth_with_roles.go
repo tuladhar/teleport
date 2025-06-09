@@ -73,7 +73,7 @@ import (
 // methods that focuses on authorizing every request
 type ServerWithRoles struct {
 	authServer *Server
-	alog       events.AuditLogSessionStreamer
+	alog       events.UnstructuredAuditLoggerSessionStreamer
 	// context holds authorization context
 	context authz.Context
 }
@@ -5887,6 +5887,20 @@ func (a *ServerWithRoles) SearchEvents(ctx context.Context, req events.SearchEve
 	}
 
 	outEvents, lastKey, err = a.alog.SearchEvents(ctx, req)
+	if err != nil {
+		return nil, "", trace.Wrap(err)
+	}
+
+	return outEvents, lastKey, nil
+}
+
+// SearchEvents allows searching audit events with pagination support.
+func (a *ServerWithRoles) SearchUnstructuredEvents(ctx context.Context, req events.SearchEventsRequest) (outEvents []*auditlogpb.EventUnstructured, lastKey string, err error) {
+	if err := a.action(types.KindEvent, types.VerbList); err != nil {
+		return nil, "", trace.Wrap(err)
+	}
+
+	outEvents, lastKey, err = a.alog.SearchUnstructuredEvents(ctx, req)
 	if err != nil {
 		return nil, "", trace.Wrap(err)
 	}

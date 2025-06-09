@@ -512,60 +512,60 @@ func NewServer(cfg *InitConfig, opts ...ServerOption) (*Server, error) {
 
 	closeCtx, cancelFunc := context.WithCancel(context.TODO())
 	services := &Services{
-		TrustInternal:                   cfg.Trust,
-		PresenceInternal:                cfg.Presence,
-		Provisioner:                     cfg.Provisioner,
-		Identity:                        cfg.Identity,
-		Access:                          cfg.Access,
-		DynamicAccessExt:                cfg.DynamicAccessExt,
-		ClusterConfigurationInternal:    cfg.ClusterConfiguration,
-		AutoUpdateService:               cfg.AutoUpdateService,
-		Restrictions:                    cfg.Restrictions,
-		Apps:                            cfg.Apps,
-		Kubernetes:                      cfg.Kubernetes,
-		Databases:                       cfg.Databases,
-		DatabaseServices:                cfg.DatabaseServices,
-		AuditLogSessionStreamer:         cfg.AuditLog,
-		Events:                          cfg.Events,
-		WindowsDesktops:                 cfg.WindowsDesktops,
-		DynamicWindowsDesktops:          cfg.DynamicWindowsDesktops,
-		SAMLIdPServiceProviders:         cfg.SAMLIdPServiceProviders,
-		UserGroups:                      cfg.UserGroups,
-		SessionTrackerService:           cfg.SessionTrackerService,
-		ConnectionsDiagnostic:           cfg.ConnectionsDiagnostic,
-		Integrations:                    cfg.Integrations,
-		UserTasks:                       cfg.UserTasks,
-		DiscoveryConfigs:                cfg.DiscoveryConfigs,
-		Okta:                            cfg.Okta,
-		AccessLists:                     cfg.AccessLists,
-		DatabaseObjectImportRules:       cfg.DatabaseObjectImportRules,
-		DatabaseObjects:                 cfg.DatabaseObjects,
-		SecReports:                      cfg.SecReports,
-		UserLoginStates:                 cfg.UserLoginState,
-		StatusInternal:                  cfg.Status,
-		UsageReporter:                   cfg.UsageReporter,
-		UserPreferences:                 cfg.UserPreferences,
-		PluginData:                      cfg.PluginData,
-		KubeWaitingContainer:            cfg.KubeWaitingContainers,
-		Notifications:                   cfg.Notifications,
-		AccessMonitoringRules:           cfg.AccessMonitoringRules,
-		CrownJewels:                     cfg.CrownJewels,
-		BotInstance:                     cfg.BotInstance,
-		SPIFFEFederations:               cfg.SPIFFEFederations,
-		StaticHostUser:                  cfg.StaticHostUsers,
-		ProvisioningStates:              cfg.ProvisioningStates,
-		IdentityCenter:                  cfg.IdentityCenter,
-		Plugins:                         cfg.Plugins,
-		PluginStaticCredentials:         cfg.PluginStaticCredentials,
-		GitServers:                      cfg.GitServers,
-		WorkloadIdentities:              cfg.WorkloadIdentity,
-		StableUNIXUsersInternal:         cfg.StableUNIXUsers,
-		WorkloadIdentityX509Revocations: cfg.WorkloadIdentityX509Revocations,
-		WorkloadIdentityX509Overrides:   cfg.WorkloadIdentityX509Overrides,
-		SigstorePolicies:                cfg.SigstorePolicies,
-		HealthCheckConfig:               cfg.HealthCheckConfig,
-		BackendInfoService:              cfg.BackendInfo,
-		VnetConfigService:               cfg.VnetConfigService,
+		TrustInternal:                          cfg.Trust,
+		PresenceInternal:                       cfg.Presence,
+		Provisioner:                            cfg.Provisioner,
+		Identity:                               cfg.Identity,
+		Access:                                 cfg.Access,
+		DynamicAccessExt:                       cfg.DynamicAccessExt,
+		ClusterConfigurationInternal:           cfg.ClusterConfiguration,
+		AutoUpdateService:                      cfg.AutoUpdateService,
+		Restrictions:                           cfg.Restrictions,
+		Apps:                                   cfg.Apps,
+		Kubernetes:                             cfg.Kubernetes,
+		Databases:                              cfg.Databases,
+		DatabaseServices:                       cfg.DatabaseServices,
+		UnstructuredAuditLoggerSessionStreamer: cfg.AuditLog,
+		Events:                                 cfg.Events,
+		WindowsDesktops:                        cfg.WindowsDesktops,
+		DynamicWindowsDesktops:                 cfg.DynamicWindowsDesktops,
+		SAMLIdPServiceProviders:                cfg.SAMLIdPServiceProviders,
+		UserGroups:                             cfg.UserGroups,
+		SessionTrackerService:                  cfg.SessionTrackerService,
+		ConnectionsDiagnostic:                  cfg.ConnectionsDiagnostic,
+		Integrations:                           cfg.Integrations,
+		UserTasks:                              cfg.UserTasks,
+		DiscoveryConfigs:                       cfg.DiscoveryConfigs,
+		Okta:                                   cfg.Okta,
+		AccessLists:                            cfg.AccessLists,
+		DatabaseObjectImportRules:              cfg.DatabaseObjectImportRules,
+		DatabaseObjects:                        cfg.DatabaseObjects,
+		SecReports:                             cfg.SecReports,
+		UserLoginStates:                        cfg.UserLoginState,
+		StatusInternal:                         cfg.Status,
+		UsageReporter:                          cfg.UsageReporter,
+		UserPreferences:                        cfg.UserPreferences,
+		PluginData:                             cfg.PluginData,
+		KubeWaitingContainer:                   cfg.KubeWaitingContainers,
+		Notifications:                          cfg.Notifications,
+		AccessMonitoringRules:                  cfg.AccessMonitoringRules,
+		CrownJewels:                            cfg.CrownJewels,
+		BotInstance:                            cfg.BotInstance,
+		SPIFFEFederations:                      cfg.SPIFFEFederations,
+		StaticHostUser:                         cfg.StaticHostUsers,
+		ProvisioningStates:                     cfg.ProvisioningStates,
+		IdentityCenter:                         cfg.IdentityCenter,
+		Plugins:                                cfg.Plugins,
+		PluginStaticCredentials:                cfg.PluginStaticCredentials,
+		GitServers:                             cfg.GitServers,
+		WorkloadIdentities:                     cfg.WorkloadIdentity,
+		StableUNIXUsersInternal:                cfg.StableUNIXUsers,
+		WorkloadIdentityX509Revocations:        cfg.WorkloadIdentityX509Revocations,
+		WorkloadIdentityX509Overrides:          cfg.WorkloadIdentityX509Overrides,
+		SigstorePolicies:                       cfg.SigstorePolicies,
+		HealthCheckConfig:                      cfg.HealthCheckConfig,
+		BackendInfoService:                     cfg.BackendInfo,
+		VnetConfigService:                      cfg.VnetConfigService,
 	}
 
 	as := Server{
@@ -781,7 +781,7 @@ type Services struct {
 	services.Notifications
 	usagereporter.UsageReporter
 	types.Events
-	events.AuditLogSessionStreamer
+	events.UnstructuredAuditLoggerSessionStreamer
 	services.SecReports
 	services.KubeWaitingContainer
 	services.AccessMonitoringRules
@@ -2049,8 +2049,8 @@ func (a *Server) Close() error {
 		errs = append(errs, err)
 	}
 
-	if a.Services.AuditLogSessionStreamer != nil {
-		if err := a.Services.AuditLogSessionStreamer.Close(); err != nil {
+	if a.Services.UnstructuredAuditLoggerSessionStreamer != nil {
+		if err := a.Services.UnstructuredAuditLoggerSessionStreamer.Close(); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -2110,8 +2110,8 @@ func (a *Server) SetDevicesGetter(s services.DevicesGetter) {
 }
 
 // SetAuditLog sets the server's audit log
-func (a *Server) SetAuditLog(auditLog events.AuditLogSessionStreamer) {
-	a.Services.AuditLogSessionStreamer = auditLog
+func (a *Server) SetAuditLog(auditLog events.UnstructuredAuditLoggerSessionStreamer) {
+	a.Services.UnstructuredAuditLoggerSessionStreamer = auditLog
 }
 
 // GetEmitter fetches the current audit log emitter implementation.
@@ -7900,7 +7900,7 @@ func (a *Server) CompareAndSwapHeadlessAuthentication(ctx context.Context, old, 
 
 // getAccessRequestMonthlyUsage returns the number of access requests that have been created this month.
 func (a *Server) getAccessRequestMonthlyUsage(ctx context.Context) (int, error) {
-	return resourceusage.GetAccessRequestMonthlyUsage(ctx, a.Services.AuditLogSessionStreamer, a.clock.Now().UTC())
+	return resourceusage.GetAccessRequestMonthlyUsage(ctx, a.Services.UnstructuredAuditLoggerSessionStreamer, a.clock.Now().UTC())
 }
 
 // verifyAccessRequestMonthlyLimit checks whether the cluster has exceeded the monthly access request limit.

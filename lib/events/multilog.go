@@ -30,7 +30,7 @@ import (
 )
 
 // NewMultiLog returns a new instance of a multi logger
-func NewMultiLog(loggers ...AuditLogger) (*MultiLog, error) {
+func NewMultiLog(loggers ...UnstructuredAuditLogger) (*MultiLog, error) {
 	emitters := make([]apievents.Emitter, 0, len(loggers))
 	for _, logger := range loggers {
 		emitter, ok := logger.(apievents.Emitter)
@@ -49,7 +49,7 @@ func NewMultiLog(loggers ...AuditLogger) (*MultiLog, error) {
 // to all loggers, and performs all read and search operations
 // on the first logger that implements the operation
 type MultiLog struct {
-	loggers []AuditLogger
+	loggers []UnstructuredAuditLogger
 	*MultiEmitter
 }
 
@@ -73,6 +73,24 @@ func (m *MultiLog) Close() error {
 func (m *MultiLog) SearchEvents(ctx context.Context, req SearchEventsRequest) (events []apievents.AuditEvent, lastKey string, err error) {
 	for _, log := range m.loggers {
 		events, lastKey, err := log.SearchEvents(ctx, req)
+		if !trace.IsNotImplemented(err) {
+			return events, lastKey, err
+		}
+	}
+	return events, lastKey, err
+}
+
+// SearchEvents is a flexible way to find events.
+//
+// Event types to filter can be specified and pagination is handled by an iterator key that allows
+// a query to be resumed.
+//
+// The only mandatory requirement is a date range (UTC).
+//
+// This function may never return more than 1 MiB of event data.
+func (m *MultiLog) SearchUnstructuredEvents(ctx context.Context, req SearchEventsRequest) (events []*auditlogpb.EventUnstructured, lastKey string, err error) {
+	for _, log := range m.loggers {
+		events, lastKey, err := log.SearchUnstructuredEvents(ctx, req)
 		if !trace.IsNotImplemented(err) {
 			return events, lastKey, err
 		}
@@ -145,6 +163,16 @@ func (m *MultiLog) GetEventExportChunks(ctx context.Context, req *auditlogpb.Get
 func (m *MultiLog) SearchSessionEvents(ctx context.Context, req SearchSessionEventsRequest) (events []apievents.AuditEvent, lastKey string, err error) {
 	for _, log := range m.loggers {
 		events, lastKey, err = log.SearchSessionEvents(ctx, req)
+		if !trace.IsNotImplemented(err) {
+			return events, lastKey, err
+		}
+	}
+	return events, lastKey, err
+}
+
+func (m *MultiLog) SearchUnstructuredSessionEvents(ctx context.Context, req SearchSessionEventsRequest) (events []*auditlogpb.EventUnstructured, lastKey string, err error) {
+	for _, log := range m.loggers {
+		events, lastKey, err = log.SearchUnstructuredSessionEvents(ctx, req)
 		if !trace.IsNotImplemented(err) {
 			return events, lastKey, err
 		}
